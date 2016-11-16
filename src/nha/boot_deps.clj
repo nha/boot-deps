@@ -10,13 +10,9 @@
   "Verify there are no dependency conflicts."
   []
   (with-pass-thru fs
-    (require '[boot.pedantic :as pedant])
-    (let [dep-conflicts (resolve 'pedant/dep-conflicts)]
-      (if-let [conflicts (not-empty (pedant/dep-conflicts pod/env))]
-        (throw (ex-info (str "Unresolved dependency conflicts. "
-                             "Use :exclusions to resolve them!")
-                        conflicts))
-        (println "\nVerified there are no dependency conflicts.")))))
+    (if-let [conflicts (not-empty (pedant/dep-conflicts pod/env))]
+      (throw (ex-info "Unresolved dependency conflicts. Use :exclusions to resolve them." conflicts))
+      (boot.util/info "No dependency conflict"))))
 
 (defn dependencies->map [deps]
   (->> deps
@@ -53,7 +49,7 @@
                               ['projectB "0.0.1"]]))))
 
 (defn deindex-dependencies [dependencies]
-  (vals dependencies))
+  (vec (vals dependencies)))
 
 (deftest deindex-dependencies-test
   (is (= [['projectA "0.0.0"]
@@ -153,30 +149,25 @@
                            ['projectD "0.0.2"]]}
            (keep-latest env conflicts)))))
 
-(deftask write-global-exclusions
-  "build a resources/exclusions.edn file that is conflict-free, by excluding older versions.
-     This is to be run (for instance) every time a package is added, and added to the global :exclusions key"
-  []
-  (with-pass-thru fs
-    (when-let [conflicts (not-empty (pedant/dep-conflicts pod/env))]
-      (let [conflicts-free (keep-latest pod/env conflicts)]
-        ;;
-        ;; note: AFAIK boot will not write to the resources directory
-        ;; so we bypass it here
-        ;;
-        (spit (io/file "resources/dependencies.edn")
-              (with-out-str (clj-stable-pprint.core/pprint conflicts-free)))))))
-
 (deftask write-resolved
-  []
+  "build a resources/exclusions.edn file that is conflict-free, by excluding older versions.
+   This is to be run (for instance) every time a package is added, and added to the global :exclusions key"
+  [f filepath  VAL  str  "path where to write the .edn file"]
   (with-pass-thru fs
-    ;; note: AFAIK boot will not write to the resources directory
-    ;; so we bypass it here
-    (spit (io/file "resources/resolved.edn")
-          (with-out-str (clj-stable-pprint.core/pprint (pedant/resolved-versions pod/env))))))
+    (if-let [conflicts (not-empty (pedant/dep-conflicts pod/env))]
+      (let [conflicts-free (:dependencies (keep-latest pod/env conflicts))]
+        (boot.util/info (str "• Writing conflict-free dependency file:" filepath "\n"))
+        (io/make-parents filepath)
+        (spit (io/file filepath)
+              (with-out-str (clj-stable-pprint.core/pprint conflicts-free))))
+      (boot.util/info (str "No dependency conflict.")))))
 
 (comment
-  (keep-latest pod/env (pedant/dep-conflicts pod/env))
+
+  (:dependencies (keep-latest pod/env (pedant/dep-conflicts pod/env)))
+
+  (boot.core/boot (comp (nha.boot-deps/write-resolved :filepath "aa/deps.edn")
+                        (boot.task.built-in/target)))
 
   (let [res (:dependencies (keep-latest pod/env (pedant/dep-conflicts pod/env)))]
     (spit (io/file "dependencies-fix.edn")
