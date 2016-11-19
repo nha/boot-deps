@@ -14,7 +14,7 @@
       (throw (ex-info "Unresolved dependency conflicts. Use :exclusions to resolve them." conflicts))
       (boot.util/info "No dependency conflict"))))
 
-(defn dependencies->map [deps]
+(defn- dependencies->map [deps]
   (->> deps
        (map boot.util/dep-as-map)
        (reduce (fn [m p] (assoc m (:project p) p)) {})))
@@ -28,7 +28,7 @@
 (defn map->dependencies [m]
   (mapv boot.util/map-as-dep (vals m)))
 
-(deftest map->dependencies-test
+(deftest- map->dependencies-test
   (is (=  [['projectA "0.0.0"]
            ['projectB "0.0.1"]]
           (map->dependencies {'projectA {:scope "compile", :project 'projectA, :version "0.0.0"},
@@ -39,7 +39,7 @@
       (is (= original
              (map->dependencies (dependencies->map original)))))))
 
-(defn index-dependencies [dependencies]
+(defn- index-dependencies [dependencies]
   (reduce (fn [acc dep] (assoc acc (first dep) dep)) {} dependencies))
 
 (deftest index-dependencies-test
@@ -48,7 +48,7 @@
          (index-dependencies [['projectA "0.0.0"]
                               ['projectB "0.0.1"]]))))
 
-(defn deindex-dependencies [dependencies]
+(defn- deindex-dependencies [dependencies]
   (vec (vals dependencies)))
 
 (deftest deindex-dependencies-test
