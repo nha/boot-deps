@@ -162,6 +162,14 @@
               (with-out-str (clj-stable-pprint.core/pprint conflicts-free))))
       (boot.util/info (str "No dependency conflict.")))))
 
+(deftask update-deps
+  "Fetch and load dependencies from edn file"
+  [d dependencies  VAL edn  "edn dependency vector"]
+  (with-pre-wrap [fs]
+    (util/info "Updating deps...")
+    (set-env! :dependencies dependencies)
+    fs))
+
 (comment
 
   (:dependencies (keep-latest pod/env (pedant/dep-conflicts pod/env)))
