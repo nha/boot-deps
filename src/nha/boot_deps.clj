@@ -1,10 +1,17 @@
 (ns nha.boot-deps
-  (:require [boot.core :as core :refer [deftask with-pass-thru]]
+  (:require [boot.core :as core :refer [deftask with-pass-thru with-pre-wrap tmp-dir! commit! add-resource]]
             [boot.pedantic :as pedant]
             [boot.pod :as pod]
+            [boot.util]
+            [boot.git]
+            ;;[boot.jgit]
+            [clj-jgit.porcelain]
+            [clj-jgit.querying]
+            [clj-jgit.util]
             [clj-stable-pprint.core]
             [clojure.java.io :as io]
-            [clojure.test :refer [deftest is testing]]))
+            [clojure.test :refer [deftest is testing]]
+            ))
 
 (deftask check-conflicts
   "Verify there are no dependency conflicts."
@@ -28,7 +35,7 @@
 (defn map->dependencies [m]
   (mapv boot.util/map-as-dep (vals m)))
 
-(deftest- map->dependencies-test
+(deftest map->dependencies-test
   (is (=  [['projectA "0.0.0"]
            ['projectB "0.0.1"]]
           (map->dependencies {'projectA {:scope "compile", :project 'projectA, :version "0.0.0"},
@@ -165,9 +172,9 @@
 (deftask update-deps
   "Fetch and load dependencies from edn file"
   [d dependencies  VAL edn  "edn dependency vector"]
-  (with-pre-wrap [fs]
-    (util/info "Updating deps...")
-    (set-env! :dependencies dependencies)
+  (boot.core/with-pre-wrap [fs]
+    (boot.util/info "Updating deps... \n" )
+    (boot.core/set-env! :dependencies dependencies)
     fs))
 
 (comment
@@ -184,4 +191,34 @@
   (boot (write-global-exclusions) (write-resolved))
 
   (clojure.test/run-all-tests)
+  )
+
+
+(deftask add-version-txt
+  "write a version to a text file"
+  [v version  VAL  str  "version"
+   f filepath  VAL  str "path where to write the .edn file"]
+  (with-pre-wrap fs
+    (let [t (tmp-dir!)]
+      (spit (clojure.java.io/file t "version.txt") version)
+      (-> fs (add-resource t) commit!))))
+
+(defn jgit-sha1 []
+  (clj-jgit.porcelain/with-repo "./"
+    (.getName (first (clj-jgit.porcelain/git-log repo)))))
+
+(defn git-sha1 []
+  (or (System/getenv "CIRCLE_SHA1")
+      (System/getenv "GIT_SHA1")
+      (jgit-sha1)
+      (some-> "git_sha.txt" clojure.java.io/resource slurp clojure.string/trim)))
+
+(deftask add-git-sha-txt []
+  (with-pre-wrap fs
+    (let [t (tmp-dir!)]
+      (spit (clojure.java.io/file t "git_sha.txt") (git-sha1))
+      (-> fs (add-resource t) commit!))))
+
+(comment
+  (boot.core/boot (add-git-sha-txt) (add-version-txt :version "0.0.1") (boot.task.built-in/target))
   )

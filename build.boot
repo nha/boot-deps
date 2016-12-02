@@ -11,7 +11,8 @@
                  [clj-stable-pprint "0.0.3" :exclusions [org.clojure/clojure]]
                  [adzerk/bootlaces "0.1.13" :scope "test"]
                  [metosin/boot-alt-test "0.1.0" :scope "test"]
-                 [adzerk/boot-test "1.1.2" :scope "test"]])
+                 [adzerk/boot-test "1.1.2" :scope "test"]
+                 [clj-jgit "0.8.9"]])
 
 (require
  '[adzerk.bootlaces :refer [bootlaces! build-jar push-snapshot push-release]]
