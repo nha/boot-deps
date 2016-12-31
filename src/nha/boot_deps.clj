@@ -222,3 +222,18 @@
 (comment
   (boot.core/boot (add-git-sha-txt) (add-version-txt :version "0.0.1") (boot.task.built-in/target))
   )
+
+
+;; From micha on slack on 31st Dec. 2016
+;; (require '[boot.pod :as pod])
+;; (import '[java.net URL URI URLClassLoader])
+
+;; (defn add-to-system-classloader
+;;   "add dependencies to system classloader
+;;   usage: (add-to-system-classloader '[[com.github.serceman/jnr-fuse "0.3.1"]])
+;;   "
+;;   [deps]
+;;   (let [cl (ClassLoader/getSystemClassLoader)
+;;         cm (doto (.getDeclaredMethod URLClassLoader "addURL" (into-array Class [URL])) (.setAccessible true))]
+;;     (doseq [d (pod/resolve-dependency-jars (assoc pod/env :dependencies deps))]
+;;       (.invoke cm cl (into-array Object [(.. d toURI toURL)])))))
