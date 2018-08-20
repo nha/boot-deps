@@ -1,18 +1,18 @@
 (set-env!
  :source-paths   #{"src"}
  :resource-paths #{}
- :dependencies '[[org.clojure/clojure "1.9.0-alpha14" :scope "provided"]
-                 [boot/core "2.6.0" :scope "provided"]
-                 [org.clojure/tools.nrepl "0.2.12" :exclusions [org.clojure/clojure]]
+ :dependencies '[[org.clojure/clojure "1.9.0" :scope "provided"]
+                 [boot/core "2.8.1" :scope "provided"]
+                 [org.clojure/tools.nrepl "0.2.13" :exclusions [org.clojure/clojure]]
                  [org.clojure/tools.reader
-                  "1.0.0-beta3"
+                  "1.3.0"
                   :exclusions
                   [org.clojure/clojure]]
                  [clj-stable-pprint "0.0.3" :exclusions [org.clojure/clojure]]
                  [adzerk/bootlaces "0.1.13" :scope "test"]
-                 [metosin/boot-alt-test "0.1.0" :scope "test"]
-                 [adzerk/boot-test "1.1.2" :scope "test"]
-                 [clj-jgit "0.8.9"]])
+                 [metosin/boot-alt-test "0.3.3" :scope "test"]
+                 [adzerk/boot-test "1.2.0" :scope "test"]
+                 [clj-jgit "0.8.10"]])
 
 (require
  '[adzerk.bootlaces :refer [bootlaces! build-jar push-snapshot push-release]]
