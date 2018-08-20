@@ -193,15 +193,14 @@
   (clojure.test/run-all-tests)
   )
 
-
 (deftask add-version-txt
-  "write a version to a text file"
-  [v version  VAL  str  "version"
-   f filepath  VAL  str "path where to write the .edn file"]
-  (with-pre-wrap fs
-    (let [t (tmp-dir!)]
-      (spit (clojure.java.io/file t "version.txt") version)
-      (-> fs (add-resource t) commit!))))
+  "A task that includes the version.txt file in the fileset."
+  []
+  (with-pre-wrap [fileset]
+    (boot.util/info "Add version.txt...\n")
+    (-> fileset
+        (add-resource (java.io.File. ".") :include #{#"^version\.txt$"})
+        commit!)))
 
 (defn jgit-sha1 []
   (clj-jgit.porcelain/with-repo "./"
